@@ -1,37 +1,20 @@
 package com.rhcloud.httpispend_jntuhceh.ispend;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Muneer on 24-05-2016.
  */
-public class SyncClass {
+public class SyncDeviceToServer {
     Context context;
     User user;
 
-    SyncClass(Context context, User user) {
+    SyncDeviceToServer(Context context, User user) {
         this.context = context;
         this.user = user;
     }
@@ -47,14 +30,20 @@ public class SyncClass {
             syncBudget();
         }
         else {
-            SyncClassServerRequests syncClassServerRequests = new SyncClassServerRequests(context);
-            syncClassServerRequests.syncUserInBackground(user, new GetUserCallback() {
-                @Override
-                public void done(User returnedUser) {
-                    databaseHelper.makeUserNotDirty(email);
-                    syncBudget();
-                }
-            });
+            if(new HelperClass(context).isNetworkAvailable()) {
+                SyncDeviceToServerServerRequests syncClassServerRequests = new SyncDeviceToServerServerRequests(context);
+                syncClassServerRequests.syncUserInBackground(user, new GetUserCallback() {
+                    @Override
+                    public void done(User returnedUser) {
+                        databaseHelper.makeUserNotDirty(email);
+                        syncBudget();
+                    }
+                });
+            }
+            else {
+                Toast.makeText(context, "No Internet connection detected - to Sync User to Server", Toast.LENGTH_LONG).show();
+                new HelperClass(context).logout();
+            }
         }
     }
 
@@ -69,14 +58,20 @@ public class SyncClass {
             syncPurchases();
         }
         else {
-            SyncClassServerRequests syncClassServerRequests = new SyncClassServerRequests(context);
-            syncClassServerRequests.syncBudgetInBackground(getBudget(cursor), new GetBudgetCallback() {
-                @Override
-                public void done(Budget returnedBudget) {
-                    databaseHelper.makeBudgetNotDirty(email);
-                    syncPurchases();
-                }
-            });
+            if(new HelperClass(context).isNetworkAvailable()) {
+                SyncDeviceToServerServerRequests syncDeviceToServerServerRequests = new SyncDeviceToServerServerRequests(context);
+                syncDeviceToServerServerRequests.syncBudgetInBackground(getBudget(cursor), new GetBudgetCallback() {
+                    @Override
+                    public void done(Budget returnedBudget) {
+                        databaseHelper.makeBudgetNotDirty(email);
+                        syncPurchases();
+                    }
+                });
+            }
+            else {
+                Toast.makeText(context, "No Internet connection detected - to Sync Budget to Server", Toast.LENGTH_LONG).show();
+                new HelperClass(context).logout();
+            }
         }
     }
 
@@ -120,14 +115,20 @@ public class SyncClass {
             json_string = json_string.substring(0, json_string.length()-1);
             json_string += "]}";
 
-            SyncClassServerRequests syncClassServerRequests = new SyncClassServerRequests(context);
-            syncClassServerRequests.syncPurchasesInBackground(user.email, json_string, new GetObjectCallback() {
-                @Override
-                public void done(Object returnedObject) {
-                    databaseHelper.makePurchasesNotDirty(user.email);
+            if(new HelperClass(context).isNetworkAvailable()) {
+                SyncDeviceToServerServerRequests syncClassServerRequests = new SyncDeviceToServerServerRequests(context);
+                syncClassServerRequests.syncPurchasesInBackground(user.email, json_string, new GetObjectCallback() {
+                    @Override
+                    public void done(Object returnedObject) {
+                        databaseHelper.makePurchasesNotDirty(user.email);
 
-                }
-            });
+                    }
+                });
+            }
+            else {
+                Toast.makeText(context, "No Internet connection detected - to Sync Purchases to Server", Toast.LENGTH_LONG).show();
+                new HelperClass(context).logout();
+            }
         }
     }
 
@@ -141,10 +142,11 @@ public class SyncClass {
             String fashion = cursor.getString(4);
             String other = cursor.getString(5);
             String total = cursor.getString(6);
+            String budgetSetAt = cursor.getString(7);
 
             HelperClass helperClass = new HelperClass(context);
 
-            budget = new Budget(email, food, entertainment, electronics, fashion, other, total, helperClass.getTimeStamp(), helperClass.getMacAddress());
+            budget = new Budget(email, food, entertainment, electronics, fashion, other, total, budgetSetAt, helperClass.getTimeStamp(), helperClass.getMacAddress());
         }
         return budget;
     }

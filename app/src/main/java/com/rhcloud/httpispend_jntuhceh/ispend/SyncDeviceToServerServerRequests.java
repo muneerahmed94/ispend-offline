@@ -40,12 +40,12 @@ import java.net.URLEncoder;
 /**
  * Created by Muneer on 24-05-2016.
  */
-public class SyncClassServerRequests {
+public class SyncDeviceToServerServerRequests {
 
     private static final int TIMEOUT_MILLISEC = 3000;
     Context context;
 
-    SyncClassServerRequests(Context context) {
+    SyncDeviceToServerServerRequests(Context context) {
         this.context = context;
     }
 
@@ -166,6 +166,7 @@ public class SyncClassServerRequests {
                         URLEncoder.encode("Fashion", "UTF-8") + "=" + URLEncoder.encode(budget.fashion, "UTF-8") + "&" +
                         URLEncoder.encode("Other", "UTF-8") + "=" + URLEncoder.encode(budget.other, "UTF-8") + "&" +
                         URLEncoder.encode("Total", "UTF-8") + "=" + URLEncoder.encode(budget.total, "UTF-8") + "&" +
+                        URLEncoder.encode("BudgetSetAt", "UTF-8") + "=" + URLEncoder.encode(budget.budgetSetAt, "UTF-8") + "&" +
                         URLEncoder.encode("UploadedTime", "UTF-8") + "=" + URLEncoder.encode(budget.uploadedTime, "UTF-8") + "&" +
                         URLEncoder.encode("UploaderMAC", "UTF-8") + "=" + URLEncoder.encode(budget.uploaderMAC, "UTF-8");
                 bufferedWriter.write(data);
@@ -186,10 +187,13 @@ public class SyncClassServerRequests {
                 httpURLConnection.disconnect();
                 return response;
             } catch (MalformedURLException e) {
-                e.printStackTrace();
+                Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
-                e.printStackTrace();
+                Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
             }
+
             return null;
         }
 

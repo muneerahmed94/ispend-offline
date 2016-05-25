@@ -2,7 +2,6 @@ package com.rhcloud.httpispend_jntuhceh.ispend;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentTransaction;
@@ -16,22 +15,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.HashMap;
 
 public class WelcomeActivity extends AppCompatActivity {
@@ -143,12 +126,10 @@ public class WelcomeActivity extends AppCompatActivity {
                         break;
 
                     case R.id.id_logout:
-                        SyncClass syncClass = new SyncClass(getBaseContext(), userLocalStore.getLoggedInUser());
+
+                        SyncDeviceToServer syncClass = new SyncDeviceToServer(getBaseContext(), userLocalStore.getLoggedInUser());
                         syncClass.syncUser();
-                        userLocalStore.clearUserData();
-                        userLocalStore.setUserLoggedIn(false);
-                        Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
-                        startActivity(intent);
+                        new HelperClass(WelcomeActivity.this).logout();
                         break;
                 }
 

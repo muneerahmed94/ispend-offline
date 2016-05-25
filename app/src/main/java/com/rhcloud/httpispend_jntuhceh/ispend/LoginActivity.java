@@ -56,19 +56,7 @@ public class LoginActivity extends AppCompatActivity {
                     User user = new User(email, password);
 
                     DatabaseHelper databaseHelper = new DatabaseHelper(LoginActivity.this);
-                    Cursor res = databaseHelper.loginUser(user);
-
-                    if(res == null || res.getCount() == 0) {
-                        showErrorMessage();
-                    }
-                    else {
-                        StringBuffer buff = new StringBuffer();
-                        if(res.moveToNext()) {
-                            user.name = res.getString(2);
-                            user.mobile = res.getString(1);
-                            logUserIn(user);
-                        }
-                    }
+                    databaseHelper.loginUser(user);
                 }
             }
         });
@@ -100,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    public void authenticate(User user)
+    /*public void authenticate(User user)
     {
         ServerRequests serverRequest = new ServerRequests(this);
         serverRequest.fetchUserDataAsyncTask(user, new GetUserCallback() {
@@ -128,7 +116,7 @@ public class LoginActivity extends AppCompatActivity {
         userLocalStore.storeUserData(returnedUser);
         userLocalStore.setUserLoggedIn(true);
         startActivity(new Intent(this, WelcomeActivity.class));
-    }
+    }*/
 
     public boolean validate() {
         String email = editTextEmail.getText().toString();

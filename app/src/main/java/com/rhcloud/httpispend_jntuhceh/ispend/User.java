@@ -20,7 +20,6 @@ public class User {
         this.email= email;
         this.mobile = "";
         this.name = "";
-        this.mobile = "";
         this.password = password;
     }
 }
