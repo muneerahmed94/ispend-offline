@@ -169,19 +169,22 @@ public class PurchaseItemFragment extends Fragment {
     }
 
     public void purchaseItem(Purchase purchase) {
-        ServerRequests serverRequest = new ServerRequests(getContext());
-        serverRequest.storePurchaseInBackground(purchase, new GetPurchaseCallback() {
-            @Override
-            public void done(Purchase returnedPurchase) {
-                Toast.makeText(getContext(), "Item Purchased successfully", Toast.LENGTH_SHORT).show();
-                fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.mainContainer, new HomeFragment());
-                fragmentTransaction.commit();
-                ((WelcomeActivity)getActivity()).getSupportActionBar().setTitle("Home");
-                navigationView = (NavigationView) getActivity().findViewById(R.id.navigationView);
-                navigationView.setCheckedItem(R.id.id_home);
-            }
-        });
+
+        DatabaseHelper databaseHelper = new DatabaseHelper(getContext());
+        boolean isInserted = databaseHelper.purchaseItem(purchase);
+
+        if(isInserted) {
+            Toast.makeText(getContext(), "Item Purchased successfully", Toast.LENGTH_SHORT).show();
+            fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.mainContainer, new HomeFragment());
+            fragmentTransaction.commit();
+            ((WelcomeActivity)getActivity()).getSupportActionBar().setTitle("Home");
+            navigationView = (NavigationView) getActivity().findViewById(R.id.navigationView);
+            navigationView.setCheckedItem(R.id.id_home);
+        }
+        else {
+            Toast.makeText(getContext(), "Unable to purchase item", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public boolean validate() {

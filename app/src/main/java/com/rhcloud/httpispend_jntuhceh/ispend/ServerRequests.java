@@ -41,7 +41,8 @@ public class ServerRequests {
 
     public void storeUserDataInBackground(User user, GetUserCallback userCallBack)
     {
-        progressDialog.show();
+        //progressDialog.show();
+        Toast.makeText(context, "Sync User Started", Toast.LENGTH_SHORT).show();
         new StoreUserDataAsyncTask(user, userCallBack).execute();
     }
 
@@ -117,8 +118,8 @@ public class ServerRequests {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            progressDialog.dismiss();
-
+            //progressDialog.dismiss();
+            Toast.makeText(context, "Sync User completed successfully", Toast.LENGTH_SHORT).show();
             if(result.equals("Registration Successfull"))
             {
                 Toast.makeText(context, result, Toast.LENGTH_LONG).show();

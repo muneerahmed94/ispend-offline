@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,9 +25,9 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
     static final String BUDGET_TABLE_NAME = "Budget";
     static final String PURCHASES_TABLE_NAME = "Purchases";
 
-    static final String CREATE_USERS_TABLE_QUERY = "CREATE TABLE Users (Email varchar(100) PRIMARY KEY, Mobile varchar(20) UNIQUE, Name varchar(100), Password varchar(50))";
-    static final String CREATE_BUDGET_TABLE_QUERY = "CREATE TABLE Budget (Email varchar(100) PRIMARY KEY, Food int(11), Entertainment int(11), Electronics int(11), Fashion int(11), Other int(11), Total int(11), FOREIGN KEY (Email) REFERENCES Users(Email))";
-    static final String CREATE_PURCHASES_TABLE_QUERY = "CREATE TABLE Purchases (PurchaseID INTEGER PRIMARY KEY AUTOINCREMENT, Buyer varchar(100), ItemName varchar(100) DEFAULT NULL, ItemPrice int(11), ItemCategory varchar(100), PurchaseTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (Buyer) REFERENCES Users(Email))";
+    static final String CREATE_USERS_TABLE_QUERY = "CREATE TABLE Users (Email varchar(100) PRIMARY KEY, Mobile varchar(20) UNIQUE, Name varchar(100), Password varchar(50), IsDirty INTEGER DEFAULT 1)";
+    static final String CREATE_BUDGET_TABLE_QUERY = "CREATE TABLE Budget (Email varchar(100) PRIMARY KEY, Food int(11), Entertainment int(11), Electronics int(11), Fashion int(11), Other int(11), Total int(11), IsDirty INTEGER DEFAULT 1, FOREIGN KEY (Email) REFERENCES Users(Email))";
+    static final String CREATE_PURCHASES_TABLE_QUERY = "CREATE TABLE Purchases (PurchaseID INTEGER PRIMARY KEY AUTOINCREMENT, Buyer varchar(100), ItemName varchar(100) DEFAULT NULL, ItemPrice int(11), ItemCategory varchar(100), PurchaseTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, IsDirty INTEGER DEFAULT 1, FOREIGN KEY (Buyer) REFERENCES Users(Email))";
 
     private final Context context;
     ArrayList<String> categories;
@@ -84,6 +87,7 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
                 contentValues.put("Buyer", user.email);
                 contentValues.put("ItemPrice", 0);
                 contentValues.put("ItemCategory", category);
+                contentValues.put("PurchaseTime", new HelperClass().getTimeStamp());
                 db.insert(PURCHASES_TABLE_NAME, null, contentValues);
             }
             return true;
@@ -146,6 +150,8 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
         contentValues.put("Electronics", budget.electronics);
         contentValues.put("Fashion", budget.fashion);
         contentValues.put("Other", budget.other);
+        contentValues.put("Total", budget.total);
+        contentValues.put("IsDirty", 1);
 
         SQLiteDatabase db = this.getWritableDatabase();
         int status = db.update(BUDGET_TABLE_NAME, contentValues, "Email = '" + email + "'", null);
@@ -153,5 +159,128 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
             return true;
         else
             return false;
+    }
+
+    public boolean purchaseItem(Purchase purchase) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put("Buyer", purchase.buyer);
+        contentValues.put("ItemName", purchase.itemName);
+        contentValues.put("ItemCategory", purchase.itemCategory);
+        contentValues.put("ItemPrice", purchase.itemPrice);
+        contentValues.put("PurchaseTime", new HelperClass().getTimeStamp());
+        long res = db.insert(PURCHASES_TABLE_NAME, null, contentValues);
+
+        if(res == -1)
+            return false;
+        else {
+            return true;
+        }
+    }
+
+    public String getMyItemsJSON(String email) {
+        String myItemsJSON = "";
+        Cursor cursor;
+        try {
+            SQLiteDatabase db = this.getWritableDatabase();
+            String loginQuery = "SELECT * FROM Purchases WHERE Buyer = '" + email + "' AND ItemName IS NOT NULL" ;
+
+            cursor = db.rawQuery(loginQuery, null);
+
+            if(cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            else {
+                JSONArray jsonArray = new JSONArray();
+
+                while (cursor.moveToNext()) {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("ItemName", cursor.getString(2));
+                    jsonObject.put("ItemPrice", cursor.getString(3));
+                    jsonObject.put("ItemCategory", cursor.getString(4));
+                    jsonObject.put("PurchaseTime", cursor.getString(5));
+
+                    jsonArray.add(jsonObject);
+                }
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("server_response", jsonArray);
+
+                myItemsJSON = jsonObject.toString();
+            }
+        }
+        catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show();
+        }
+
+        return myItemsJSON;
+    }
+
+    public Cursor getDirtyUser(String email) {
+        Cursor res = null;
+
+        try {
+            SQLiteDatabase db = this.getWritableDatabase();
+            String query = "SELECT * FROM Users WHERE Email = '" + email + "' AND IsDirty = 1";
+            res = db.rawQuery(query, null);
+
+            return res;
+        }
+        catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show();
+        }
+        return res; //because java says missing return statement
+    }
+
+    public Cursor getDirtyBudget(String email) {
+        Cursor res = null;
+        try {
+            SQLiteDatabase db = this.getWritableDatabase();
+            String query = "SELECT * FROM Budget WHERE Email = '" + email + "' AND IsDirty = 1";
+            res = db.rawQuery(query, null);
+
+            return res;
+        }
+        catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show();
+        }
+        return res; //because java says missing return statement
+    }
+
+    public Cursor getDirtyPurchases(String email) {
+        Cursor res = null;
+        try {
+            SQLiteDatabase db = this.getWritableDatabase();
+            String query = "SELECT * FROM Purchases WHERE Buyer = '" + email + "' AND IsDirty = 1";
+            res = db.rawQuery(query, null);
+
+            return res;
+        }
+        catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show();
+        }
+        return res; //because java says missing return statement
+    }
+
+    public void makeUserNotDirty(String email) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("IsDirty", 0);
+        db.update(USERS_TABLE_NAME, contentValues, "Email = '" + email + "'", null);
+    }
+
+    public void makeBudgetNotDirty(String email) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("IsDirty", 0);
+        db.update(BUDGET_TABLE_NAME, contentValues, "Email = '" + email + "'", null);
+    }
+    public void makePurchasesNotDirty(String email) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("IsDirty", 0);
+        db.update(PURCHASES_TABLE_NAME, contentValues, "Buyer = '" + email + "'", null);
     }
 }

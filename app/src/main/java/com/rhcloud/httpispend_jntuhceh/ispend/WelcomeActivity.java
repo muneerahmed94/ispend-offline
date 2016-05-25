@@ -143,6 +143,8 @@ public class WelcomeActivity extends AppCompatActivity {
                         break;
 
                     case R.id.id_logout:
+                        SyncClass syncClass = new SyncClass(getBaseContext(), userLocalStore.getLoggedInUser());
+                        syncClass.syncUser();
                         userLocalStore.clearUserData();
                         userLocalStore.setUserLoggedIn(false);
                         Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
@@ -266,38 +268,11 @@ public class WelcomeActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... params) {
-            try
-            {
-                URL url = new URL(json_url);
-                HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoOutput(true);
-                OutputStream os = httpURLConnection.getOutputStream();
-                BufferedWriter bufferedWriter = new BufferedWriter((new OutputStreamWriter(os, "UTF-8")));
-                String data = URLEncoder.encode("Email", "UTF-8") + "=" + URLEncoder.encode(userLocalStore.getLoggedInUser().email, "UTF-8");
-
-                bufferedWriter.write(data);
-                bufferedWriter.flush();
-                bufferedWriter.close();
-                os.close();
-
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder stringBuilder = new StringBuilder();
-                while((JSON_STRING = bufferedReader.readLine()) != null)
-                {
-                    stringBuilder.append(JSON_STRING + "\n");
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                return stringBuilder.toString().trim();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            try {
+                return new DatabaseHelper(getBaseContext()).getMyItemsJSON(userLocalStore.getLoggedInUser().email);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
             return null;
         }
 
@@ -333,45 +308,10 @@ public class WelcomeActivity extends AppCompatActivity {
 
         @Override
         protected HashMap<String, String> doInBackground(Void... params) {
-            String server_url = "http://ispend-jntuhceh.rhcloud.com/bargraph/index.php";
-            HashMap<String, String> hm = new HashMap<String, String>();
 
-            try
-            {
-
-                URL url = new URL(server_url);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                Uri.Builder builder = new Uri.Builder().appendQueryParameter("Email", email);
-                String query = builder.build().getEncodedQuery();
-                OutputStream os = conn.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-                writer.write(query);
-                writer.flush();
-                writer.close();
-                os.close();
-                conn.connect();
-                InputStream in = new BufferedInputStream(conn.getInputStream());
-                String response = IOUtils.toString(in, "UTF-8");
-                JSONObject jResponse = new JSONObject(response);
-
-
-
-                hm.put("Food",jResponse.getString("Food"));
-                hm.put("Entertainment",jResponse.getString("Entertainment"));
-                hm.put("Electronics",jResponse.getString("Electronics"));
-                hm.put("Fashion",jResponse.getString("Fashion"));
-                hm.put("Other",jResponse.getString("Other"));
-
-                hm.put("TFood",jResponse.getString("TFood"));
-                hm.put("TEntertainment",jResponse.getString("TEntertainment"));
-                hm.put("TElectronics",jResponse.getString("TElectronics"));
-                hm.put("TFashion",jResponse.getString("TFashion"));
-                hm.put("TOther",jResponse.getString("TOther"));
-
-                return hm;
-
-            } catch (IOException | JSONException e) {
+            try {
+                return new DatabaseHelper(getBaseContext()).getPurchaseSummary(userLocalStore.getLoggedInUser().email);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return null;
@@ -402,7 +342,7 @@ public class WelcomeActivity extends AppCompatActivity {
                 fragmentTransaction.commit();
             }
             else {
-                Toast.makeText(getBaseContext(), "unable to retrive budget", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(), "unable to retrieve budget", Toast.LENGTH_SHORT).show();
             }
         }
     }

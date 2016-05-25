@@ -45,48 +45,50 @@ public class MyItemsFragment extends Fragment {
         Items items = new Items("Name", "Category", "Price");
         itemAdapter.add(items);
 
-        try {
-            jsonObject = new JSONObject(json_string);
-            jsonArray = jsonObject.getJSONArray("server_response");
+        if(json_string != null) { // to avoid null pointer exception
+            try {
+                jsonObject = new JSONObject(json_string);
+                jsonArray = jsonObject.getJSONArray("server_response");
 
-            int count = 0;
-            String itemName, itemCategory, itemPrice;
-            while(count < jsonArray.length())
-            {
-                JSONObject jo = jsonArray.getJSONObject(count);
-                itemName = jo.getString("ItemName");
-                itemCategory = jo.getString("ItemCategory");
-                itemPrice = jo.getString("ItemPrice");
-                Items item = new Items(itemName, itemCategory, itemPrice);
-                itemAdapter.add(item);
-                count++;
-            }
-        }catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                JSONObject jo = null;
-                String purchaseTime = "";
-
-                if(position > 0) {
-                    try {
-                        jo = jsonArray.getJSONObject(position-1);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        purchaseTime = jo.getString("PurchaseTime");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    Toast.makeText(getContext(), getDisplayDateTimeString(purchaseTime), Toast.LENGTH_SHORT).show();
+                int count = 0;
+                String itemName, itemCategory, itemPrice;
+                while(count < jsonArray.length())
+                {
+                    JSONObject jo = jsonArray.getJSONObject(count);
+                    itemName = jo.getString("ItemName");
+                    itemCategory = jo.getString("ItemCategory");
+                    itemPrice = jo.getString("ItemPrice");
+                    Items item = new Items(itemName, itemCategory, itemPrice);
+                    itemAdapter.add(item);
+                    count++;
                 }
+            }catch (JSONException e) {
+                e.printStackTrace();
             }
-        });
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    JSONObject jo = null;
+                    String purchaseTime = "";
+
+                    if(position > 0) {
+                        try {
+                            jo = jsonArray.getJSONObject(position-1);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            purchaseTime = jo.getString("PurchaseTime");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        Toast.makeText(getContext(), getDisplayDateTimeString(purchaseTime), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
 
         return view;
     }
@@ -95,7 +97,7 @@ public class MyItemsFragment extends Fragment {
         String displayDateTimeString = "";
 
         DateFormat displayFormat = new SimpleDateFormat("EEE, MMM d, yyyy hh:mm a");
-        displayFormat.setTimeZone(TimeZone.getTimeZone("Asia/Calcutta"));
+        //displayFormat.setTimeZone(TimeZone.getTimeZone("Asia/Calcutta"));
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date inputDateTimeObject = new Date();
