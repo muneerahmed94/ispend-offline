@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.view.View;
+import android.webkit.HttpAuthHandler;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
@@ -498,5 +499,39 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
             budget = new Budget(email, food, entertainment, electronics, fashion, other, total, budgetSetAt);
         }
         return budget;
+    }
+
+    void insertPurchaseFromSMS(HashMap<String, String> purchaseDetails) {
+        UserLocalStore userLocalStore = new UserLocalStore(context);
+        HelperClass helperClass = new HelperClass(context);
+
+        String email = helperClass.getEmailAccount();
+
+        Cursor res = null;
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        try {
+            String loginQuery = "SELECT * FROM Users WHERE Email = '" + email +  "'";
+            res = db.rawQuery(loginQuery, null);
+            if(res == null || res.getCount() == 0) {
+                Toast.makeText(context, "User not found on device...attempting to find User online", Toast.LENGTH_LONG).show();
+            }
+            else {
+                Purchase purchase = new Purchase(email, purchaseDetails.get("MerchantName"), purchaseDetails.get("Amount"), helperClass.getCategory(purchaseDetails.get("MerchantName")));
+                purchaseItem(purchase);
+
+
+                User user = new User(email, "");
+                userLocalStore.storeUserData(user);
+                userLocalStore.setUserLoggedIn(true);
+                SyncDeviceToServer syncDeviceToServer = new SyncDeviceToServer(context, user);
+                syncDeviceToServer.syncPurchases();
+            }
+        }
+        catch (Exception e) {
+            Toast.makeText(context, e.toString(), Toast.LENGTH_LONG).show();
+        }
+
+
     }
 }

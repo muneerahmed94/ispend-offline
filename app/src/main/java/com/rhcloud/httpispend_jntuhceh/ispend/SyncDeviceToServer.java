@@ -121,7 +121,6 @@ public class SyncDeviceToServer {
                     @Override
                     public void done(Object returnedObject) {
                         databaseHelper.makePurchasesNotDirty(user.email);
-
                     }
                 });
             }
