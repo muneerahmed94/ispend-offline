@@ -151,7 +151,7 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
                 contentValues.put("Buyer", user.email);
                 contentValues.put("ItemPrice", 0);
                 contentValues.put("ItemCategory", category);
-                contentValues.put("PurchaseTime", new HelperClass().getTimeStamp());
+                contentValues.put("PurchaseTime", new HelperClass(context).getTimeStamp());
                 db.insert(PURCHASES_TABLE_NAME, null, contentValues);
             }
             return true;
@@ -256,7 +256,7 @@ public class DatabaseHelper  extends SQLiteOpenHelper {
         contentValues.put("ItemName", purchase.itemName);
         contentValues.put("ItemCategory", purchase.itemCategory);
         contentValues.put("ItemPrice", purchase.itemPrice);
-        contentValues.put("PurchaseTime", new HelperClass().getTimeStamp());
+        contentValues.put("PurchaseTime", new HelperClass(context).getTimeStamp());
         long res = db.insert(PURCHASES_TABLE_NAME, null, contentValues);
 
         if(res == -1)

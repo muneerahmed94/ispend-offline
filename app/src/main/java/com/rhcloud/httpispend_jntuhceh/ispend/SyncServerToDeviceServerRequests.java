@@ -2,6 +2,7 @@ package com.rhcloud.httpispend_jntuhceh.ispend;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.widget.Toast;
@@ -75,6 +76,9 @@ public class SyncServerToDeviceServerRequests {
                 conn.connect();
                 InputStream in = new BufferedInputStream(conn.getInputStream());
                 String response = IOUtils.toString(in, "UTF-8");
+                if(response.length() <= 4) {
+                    return null;
+                }
                 JSONObject jResponse = new JSONObject(response);
 
                 if (jResponse.length() == 0)
@@ -143,6 +147,9 @@ public class SyncServerToDeviceServerRequests {
                 conn.connect();
                 InputStream in = new BufferedInputStream(conn.getInputStream());
                 String response = IOUtils.toString(in, "UTF-8");
+                if(response.length() <= 3) {
+                    return null;
+                }
                 JSONObject jResponse = new JSONObject(response);
 
                 if (jResponse.length() == 0)
@@ -169,8 +176,8 @@ public class SyncServerToDeviceServerRequests {
             }
             catch (Exception e) {
                 Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
+                return null;
             }
-            return null;
         }
 
         @Override
@@ -179,7 +186,8 @@ public class SyncServerToDeviceServerRequests {
                 budgetCallback.done(returnedBudget);
             }
             else {
-                Toast.makeText(context, "unable to retrieve budget", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "unable to retrieve budget from server", Toast.LENGTH_SHORT).show();
+                context.startActivity(new Intent(context, WelcomeActivity.class));
             }
         }
     }
